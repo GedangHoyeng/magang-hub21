@@ -25,3 +25,12 @@ Status: backlog -> todo -> doing -> in_review -> done.
 KONVENSI: UI Bahasa Indonesia; kode dan nama variabel Bahasa Inggris; zona waktu Asia/Jakarta; mobile-first (absen dari HP); satu fitur satu branch; commit kecil dengan pesan jelas; setiap halaman punya loading, empty, dan error state; jangan hardcode secret (pakai .env.local, sediakan .env.example).
 
 CARA KERJA: sebelum menulis kode, tulis rencana singkat (file yang dibuat/diubah). Setelah selesai, jelaskan cara menjalankan dan mengetes, lalu daftar yang belum selesai. Jika ada hal ambigu, tanyakan, jangan menebak. Jangan ubah file di luar modul yang sedang dikerjakan.
+
+KEAMANAN DATA (WAJIB):
+- Peserta HANYA BOLEH MEMBACA tabel attendance, daily_reports, dan face_templates (RLS menolak tulis langsung).
+- Semua penulisan ke tabel itu dilakukan di Server Action / Route Handler dengan urutan: (1) supabase.auth.getUser() untuk identitas, (2) validasi aturan bisnis (GPS, jam server, wajah, batas jam laporan), (3) tulis memakai client service-role dari lib/supabase/admin.ts.
+- user_id SELALU diambil dari getUser(), tidak pernah dari input form.
+- lib/supabase/admin.ts tidak boleh di-import dari file "use client" atau komponen klien.
+- Menulis notifications untuk user lain (pembimbing -> peserta dan sebaliknya) juga lewat client service-role di server.
+- Jam server: pakai public.server_time_wib() (timestamp tanpa zona, sudah WIB) dan public.today_wib().
+- Kartu tugas: aturan perpindahan ditegakkan trigger di DB; UI hanya menampilkan pesan error-nya, jangan menduplikasi aturannya dengan cara lain.
