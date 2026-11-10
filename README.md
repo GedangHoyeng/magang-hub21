@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Magang Hub
 
-## Getting Started
+Sistem manajemen magang minimal berbasis **Next.js (App Router)** + **Supabase Auth**.
 
-First, run the development server:
+## Fitur (versi minimal)
+- Login email + password (Supabase Auth) dan logout
+- Proteksi route berbasis role via `proxy.ts` (Next.js 16)
+  - `admin` → `/admin`
+  - `mentor` → `/mentor`
+  - `intern` → `/dashboard`
+- App shell responsif: sidebar di desktop, bottom navigation di mobile
+- Menu: Dashboard, Absensi, Izin, Tugas, Laporan Harian, Penilaian, Pengumuman (placeholder)
+- Komponen bersama: `PageHeader`, `StatusBadge`, `EmptyState`, `ConfirmDialog`
+- Helper auth: `getCurrentUser()`, `requireRole()` di `lib/auth.ts`
 
+## Prasyarat
+- Node.js 20+
+- npm
+- Project Supabase (database + Auth) dengan schema yang sudah diterapkan
+
+## Cara clone
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <url-repo>
+cd magang-hub21
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Konfigurasi `.env.local`
+Salin template environment, lalu isi kredensial Supabase:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cp .env.example .env.local
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Isi nilai berikut di `.env.local`:
+```env
+NEXT_PUBLIC_SUPABASE_URL=<url-project-supabase>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key-supabase>
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key-supabase>  # diperlukan untuk seed
+```
 
-## Learn More
+> `SUPABASE_SERVICE_ROLE_KEY` hanya dipakai untuk skrip seed/admin di server. Jangan diekspos ke klien.
 
-To learn more about Next.js, take a look at the following resources:
+## Instalasi & menjalankan
+```bash
+npm install
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Buka [http://localhost:3000](http://localhost:3000). Pengguna yang belum login akan diarahkan ke `/login`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Seed data & akun uji
+Jika database/schema sudah siap, jalankan seed untuk membuat periode, lokasi, akun, dan data demo:
 
-## Deploy on Vercel
+```bash
+npm run seed
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Skrip seed: `scripts/seed.ts` (butuh `SUPABASE_SERVICE_ROLE_KEY` di `.env.local`).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Daftar akun seed
+Semua akun menggunakan kata sandi: **`Magang123!`**
+
+| Role   | Email                 | Nama          | Catatan                          |
+|--------|-----------------------|---------------|----------------------------------|
+| Admin  | `admin@magang.test`   | Admin Magang  | Redirect ke `/admin` setelah login |
+| Mentor | `mentor@magang.test`  | Mas Hanif     | Redirect ke `/mentor` setelah login |
+| Intern | `intern1@magang.test` | Intern Satu   | Redirect ke `/dashboard` setelah login |
+| Intern | `intern2@magang.test` | Intern Dua    | Dibimbing Mas Hanif               |
+| Intern | `intern3@magang.test` | Intern Tiga   | Dibimbing Mas Hanif               |
+| Intern | `intern4@magang.test` | Intern Empat  | Dibimbing Mas Hanif               |
+
+## Skrip yang tersedia
+- `npm run dev` — jalankan development server
+- `npm run build` — build produksi
+- `npm run start` — jalankan hasil build
+- `npm run lint` — linting (ESLint)
+- `npm run seed` — seed akun & data demo (`tsx --env-file=.env.local scripts/seed.ts`)
+
+## Struktur penting
+- `proxy.ts` — proteksi route & redirect berbasis role (pengganti middleware di Next.js 16)
+- `lib/auth.ts` — `getCurrentUser()`, `requireRole()`, tipe `UserRole`
+- `lib/auth-actions.ts` — Server Actions: `signInAction`, `signOutAction`
+- `app/login/page.tsx` — halaman login
+- `app/(app)/...` — halaman terproteksi dalam app shell (dashboard/menu)
+- `components/AppShell.tsx` — sidebar (desktop) + bottom nav (mobile)
+- `components/PageHeader.tsx`, `components/StatusBadge.tsx`, `components/EmptyState.tsx`, `components/ConfirmDialog.tsx` — komponen bersama
+
+## Catatan
+- Route role khusus: `/admin`, `/mentor`, `/dashboard` (masing-masing hanya untuk role terkait).
+- Halaman menu selain landing role masih berupa placeholder dan akan dilanjutkan oleh tim terkait.
+
